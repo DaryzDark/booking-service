@@ -12,8 +12,8 @@
 
 | Инструмент | Версия | Зачем |
 |---|---|---|
-| [Docker](https://docs.docker.com/get-docker/) | 24 | запуск всего стека через `compose` |
-| [Docker Compose](https://docs.docker.com/compose/) | v2 (`compose` plugin) | оркестрация сервисов |
+| [Docker](https://docs.docker.com/get-docker/) | 24+ | запуск всего стека через `compose` |
+| [Docker Compose](https://docs.docker.com/compose/) | v2+ (`compose` plugin) | оркестрация сервисов |
 | [Python](https://www.python.org/downloads/) | 3.13+ | только для локального запуска тестов |
 | [uv](https://docs.astral.sh/uv/getting-started/installation/) | 0.5+ | только для локального запуска тестов |
 
