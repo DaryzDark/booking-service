@@ -1,5 +1,5 @@
 x-app-env: &app-env
-  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://booking:booking@db:5432/booking}
+  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://admin:admin@db:5432/booking}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
   FAILURE_RATE: ${FAILURE_RATE:-0.15}
@@ -44,6 +44,7 @@ services:
     <<: *app-build
     command: alembic upgrade head
     environment: *app-env
+    restart: on-failure
     depends_on:
       db:
         condition: service_healthy
