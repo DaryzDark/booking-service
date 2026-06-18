@@ -1,0 +1,78 @@
+x-app-env: &app-env
+  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://booking:booking@db:5432/booking}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  FAILURE_RATE: ${FAILURE_RATE:-0.15}
+  MAX_RETRIES: ${MAX_RETRIES:-3}
+  RETRY_BASE_DELAY: ${RETRY_BASE_DELAY:-2}
+  RETRY_MAX_DELAY: ${RETRY_MAX_DELAY:-60}
+  RATE_LIMIT: ${RATE_LIMIT:-10/minute}
+  RATE_LIMIT_STORAGE: ${RATE_LIMIT_STORAGE:-memory://}
+
+x-app-build: &app-build
+  build: .
+  image: booking-service:local
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+      POSTGRES_DB: ${POSTGRES_DB:-booking}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-booking}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "6379:6379"
+
+  migrate:
+    <<: *app-build
+    command: alembic upgrade head
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app-build
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment: *app-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *app-build
+    command: taskiq worker app.tasks.broker:broker app.tasks.confirm
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:

@@ -1,0 +1,13 @@
+.git
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+*.sqlite3
+*.db
+.env
+.idea
+.vscode
+tests
+README.md
